@@ -1,30 +1,35 @@
 package Creative.train.DataTypes;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class Session {
     private boolean active;
     private final UUID sessionId;
-    private final List<Player> playerList = new ArrayList<>();
-
-    public Session(){
+    private final Map<String,Player> playerMap = new HashMap<>();
+    private final UUID hostUuid;
+    public Session(UUID hostUuid){
         sessionId = UUID.randomUUID();
+        this.hostUuid = hostUuid;
     }
 
     public void setActive() {
         this.active = true;
     }
-    public void addPlayer(Player player){
-        playerList.add(player);
+    public boolean addPlayer(Player player){
+        if(playerMap.containsKey(player.getName())) return false;
+        playerMap.put(player.getName(),player);
+        return true;
     }
 
     public UUID getSessionId() {
         return sessionId;
     }
 
-    public List<Player> getPlayerList() {
-        return playerList;
+    public Map<String,Player> getPlayerMap() {
+        return playerMap;
+    }
+
+    public UUID getHostUuid() {
+        return hostUuid;
     }
 }

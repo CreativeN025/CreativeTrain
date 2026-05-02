@@ -4,22 +4,27 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class RegisterUser {
+public class User {
 
     private final UUID playerUuid;
     private final String playerName;
     private final UUID joinedSession;
+    private final boolean isHost;
 
     @JsonCreator
-    public RegisterUser(
+    public User(
             @JsonProperty("playerUuid") UUID playerUuid,
             @JsonProperty("playerName") String playerName,
             @JsonProperty("joinedSession") UUID joinedSession
-    )
-    {
+    ) {
         this.playerUuid = playerUuid;
         this.playerName = playerName;
         this.joinedSession = joinedSession;
+        this.isHost = (joinedSession == null); // infer host
+    }
+
+    public boolean isHost() {
+        return isHost;
     }
 
     public UUID getPlayerUuid() { return playerUuid; }

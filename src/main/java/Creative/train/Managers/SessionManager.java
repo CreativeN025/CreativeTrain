@@ -1,18 +1,22 @@
 package Creative.train.Managers;
 
 import Creative.train.DataTypes.Player;
+import Creative.train.DataTypes.RegisterPlayerResponse;
+import Creative.train.DataTypes.RequestTypes.HostInformation;
 import Creative.train.DataTypes.Session;
-import Creative.train.ResponseFormatter;
+import org.springframework.http.ResponseEntity;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class SessionManager {
+    Map<UUID,Player> playerMap;
     private final Map<UUID, Session> activeSessions;
     private static final SessionManager sessionManager = new SessionManager();
     private SessionManager(){
         activeSessions = new HashMap<>();
+        playerMap = new HashMap<>();
     }
 
     public static SessionManager getInstance() {
@@ -22,15 +26,69 @@ public class SessionManager {
     public Session getSession(UUID uuid){
         return activeSessions.get(uuid);
     }
-    public void registerSession(Session session){
-        activeSessions.put(session.getSessionId(),session);
+    public Session registerSession(UUID playerUuid){
+        Session newSession = new Session(playerUuid);
+
+        activeSessions.put(newSession.getSessionId(),newSession);
+        return newSession;
     }
-    public String registerPlayerToSession(UUID sessionUuid,Player player){
-        if(!activeSessions.containsKey(sessionUuid)){
-            return ResponseFormatter.buildResponse(404,"Session not found","");
+    public RegisterPlayerResponse registerPlayerToSession(UUID sessionUuid, Player player) {
+
+        RegisterPlayerResponse response = new RegisterPlayerResponse();
+
+        // 1. VALIDATION
+        if (playerMap.containsKey(player.getPlayerId())) {
+            return error(response, 409, "user already in a session");
         }
-        activeSessions.get(sessionUuid).addPlayer(player);
-        return ResponseFormatter.buildResponse(200,"OK","");
+
+        if (!player.isHost() && !activeSessions.containsKey(sessionUuid)) {
+            return error(response, 404, "Session not found");
+        }
+
+        // 2. ACTION
+        if (player.isHost()) {
+            return handleHost(player, response);
+        }
+
+        return handleJoin(sessionUuid, player, response);
+    }
+    private RegisterPlayerResponse error(RegisterPlayerResponse response, int code, String msg) {
+        response.setResponse(ResponseEntity.status(code).body(msg));
+        return response;
+
+    }
+    private RegisterPlayerResponse handleHost(Player player, RegisterPlayerResponse response) {
+
+        Session newSession = registerSession(player.getPlayerId());
+
+        if(!activeSessions.get(newSession.getSessionId()).addPlayer(player)){
+            return error(response,409,"Username already joined");
+        }
+
+        playerMap.put(player.getPlayerId(), player);
+
+        response.setHostInformation(
+                new HostInformation(newSession.getSessionId(), player.getPlayerId())
+        );
+
+        return response;
     }
 
+    private RegisterPlayerResponse handleJoin(UUID sessionUuid, Player player, RegisterPlayerResponse response) {
+
+        Session session = activeSessions.get(sessionUuid);
+
+        if(!session.addPlayer(player)){
+            return error(response,409,"Username already joined");
+
+        }
+        playerMap.put(player.getPlayerId(), player);
+
+        response.setResponse(ResponseEntity.status(200).body("OK"));
+
+        return response;
+    }
+    public UUID getHostUuid(UUID session){
+        return activeSessions.get(session).getHostUuid();
+    }
 }
