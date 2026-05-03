@@ -45,13 +45,13 @@ async function startSession() {
     return res;
 }
 
-// ---------------- REGISTER USER ----------------
+
 async function registerUser() {
+    const isHost = document.getElementById("isHost").checked;
     const playerUuidInput = document.getElementById("player-uuid");
     const playerName = document.getElementById("player-name").value;
     const joinedSession = document.getElementById("register-session-uuid").value;
     const file = playerUuidInput.files[0]; // Get the file from the input
-
     // Check if a file has been selected
     if (!file) {
         alert("Please select a file to upload.");
@@ -61,15 +61,20 @@ async function registerUser() {
         alert("Please enter your username.");
         return;
     }
-
+    if(!isHost && !joinedSession) {
+        alert("Please enter the session ID you want to join.");
+        return;
+    }
     // Create a FormData object to send both file and other fields
     const formData = new FormData();
     formData.append("playerQr", file); // Append the file as 'playerQr'
     formData.append("playerName", playerName);
-    formData.append("joinedSession", joinedSession); // Optional, if provided
+    if(!isHost) {
+        formData.append("joinedSession", joinedSession);
+    }
 
     // Make the POST request with FormData
-    const response = await fetch("/api/session/registerUser", {
+    const response = await fetch("/api/session/register", {
         method: "POST",
         body: formData // Note: FormData automatically sets the correct Content-Type
     });

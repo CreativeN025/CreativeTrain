@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class SessionManager {
@@ -90,5 +91,17 @@ public class SessionManager {
     }
     public UUID getHostUuid(UUID session){
         return activeSessions.get(session).getHostUuid();
+    }
+
+    /**
+     *
+     * @param sessionUuid sessionUuid
+     * @return every username in session
+     * @throws NullPointerException when no session is found
+     */
+    public Set<String> getAllNamesInSession(UUID sessionUuid){
+        Session session = activeSessions.get(sessionUuid);
+        if(session == null) return null;
+        return session.getPlayerMap().keySet();
     }
 }

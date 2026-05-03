@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.image.BufferedImage;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -78,5 +79,11 @@ public class SessionApi {
             return ResponseEntity.status(403).body("You are not the host");
         }
         return ResponseEntity.status(HttpStatus.OK).body("OK");
+    }
+    @GetMapping("/connectedUsers")
+    public ResponseEntity<?> getConnectedUsers(@RequestParam("sessionUuid") UUID sessionUuid){
+        Set<String> names = sessionManager.getAllNamesInSession(sessionUuid);
+        if(names==null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Session not found");
+        return ResponseEntity.status(HttpStatus.OK).body(names);
     }
 }
