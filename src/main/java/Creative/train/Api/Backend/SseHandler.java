@@ -15,7 +15,6 @@ public class SseHandler {
     //private final Map<UUID, Player> connectionMap;
     private final static SseHandler INSTANCE = new SseHandler();
     private SseHandler(){
-        //connectionMap = SessionManager.getInstance().getPlayerMap();
     }
     public static SseHandler getInstance(){
         return INSTANCE;
