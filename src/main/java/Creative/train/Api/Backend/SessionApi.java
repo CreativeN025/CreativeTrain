@@ -54,6 +54,7 @@ public class SessionApi {
             websocketHandler.sendNewPlayerInfo(playersInSession, playerName);
             return ResponseEntity.ok(result.getHostInformation());
         }
+
         return result.getResponse();
     }
     private static ResponseEntity<String> validate(String playerName, MultipartFile playerQr) {
