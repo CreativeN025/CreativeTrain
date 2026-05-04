@@ -113,7 +113,9 @@ public class SessionManager {
         return session.getAllPlayerUuids();
     }
     public void removePlayer(UUID playerUuid){
-        UUID sessionUuid=playerMap.get(playerUuid).getSessionUUID();
+        Player player =playerMap.get(playerUuid);
+        if(player==null) return;
+        UUID sessionUuid=player.getSessionUUID();
 
         playerMap.remove(playerUuid);
         Session session = activeSessions.get(sessionUuid);

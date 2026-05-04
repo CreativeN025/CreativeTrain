@@ -74,7 +74,11 @@ public class SessionApi {
         String result =QrManager.readQrCode(qrImage);
         return UUID.fromString(result);
     }
-
+    @PostMapping("/leaveGame")
+    public ResponseEntity<?> leaveGame(@RequestParam UUID playerUuid){
+        SseHandler.disconnectPlayer(playerUuid);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
     @PostMapping("/start")
     public ResponseEntity<?> startSession(@RequestBody PlayerInformation data){
         UUID hostUuid = data.getPlayerUuid();

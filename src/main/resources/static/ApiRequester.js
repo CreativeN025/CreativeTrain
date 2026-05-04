@@ -44,24 +44,56 @@ async function startSession() {
     console.log("Start session:", res);
     return res;
 }
+async function leaveSession() {
+    const playerUuid = sessionStorage.getItem("playerUuid");
+
+    if (!playerUuid) {
+        console.error("No playerUuid in sessionStorage");
+        return;
+    }
+
+    const url = `/api/session/leaveGame?playerUuid=${playerUuid}`;
+
+    const res = await makePostRequest(url, "POST");
+
+    stopStream();
+
+    console.log("left session " + playerUuid);
+    return res;
+}
 let eventSource;
+const userElements = new Map();
 
 function startStream(playerUuid) {
-const url = `/api/stream?playerUuid=${playerUuid}&ts=${Date.now()}`;
+    const url = `/api/stream?playerUuid=${playerUuid}&ts=${Date.now()}`;
     const eventSource = new EventSource(url);
-    
-    // Assuming `eventSource` is initialized as shown previously
-eventSource.onmessage = (event) => {
-    console.log("Stream message:", event.data);  // Log the raw message
-    const eventData = event.data;
 
-    if (eventData.includes('playerJoined')) {
-        console.log("New player joined:", eventData);
-        // Parse or handle the event data
-        const playerName = eventData.split('|')[1];  // Assuming the format is playerJoined|playerName
-        alert(`${playerName} has joined the session!`);
-    }
-};
+    // ✅ ADD USER
+    eventSource.addEventListener("playerJoined", (event) => {
+        console.log("New player joined:", event.data);
+
+        const container = document.getElementById("currentUsers");
+
+        const p = document.createElement("p");
+        p.textContent = event.data;
+
+        container.appendChild(p);
+
+        // store reference so we can remove later
+        userElements.set(event.data, p);
+    });
+
+    // ❌ REMOVE USER
+    eventSource.addEventListener("playerDisconnected", (event) => {
+        console.log("Player disconnected:", event.data);
+
+        const element = userElements.get(event.data);
+
+        if (element) {
+            element.remove(); // removes from DOM
+            userElements.delete(event.data);
+        }
+    });
 
     eventSource.onerror = () => {
         console.log("Stream disconnected");
@@ -74,8 +106,16 @@ async function registerAndConnect() {
     const data = JSON.parse(result.data);  // Parse the string to JSON
 
     const playerUuid = data.playerUuid; // Access the playerUuid property
+    const sessionUuid = data.sessionId; // Access the sessionUuid property
+    sessionStorage.setItem("playerUuid", playerUuid)
+    sessionStorage.setItem("sessionUuid",sessionUuid)
 
+    console.log("loginResponse", `sessionStorage set with token value: ${playerUuid}`)
     startStream(playerUuid);
+    //const sessionUuid= document.getElementById("register-session-uuid").value;
+    if (sessionUuid && sessionUuid.length > 0) {
+                await getCurrentUsers({  sessionUuid});
+    }
 }
 async function registerUser() {
     const isHost = document.getElementById("isHost").checked;
@@ -118,4 +158,49 @@ async function registerUser() {
         ok: response.ok,
         data: text
     };
+}
+async function getCurrentUsers(params) {
+    const url = `/api/session/connectedUsers?${new URLSearchParams(params).toString()}`;
+    const response = await makeGetRequest(url);
+
+    const container = document.getElementById("currentUsers");
+
+    // optional but recommended: prevent duplicates
+    container.innerHTML = "";
+
+    let users;
+
+    try {
+        users = JSON.parse(response.body);
+    } catch (e) {
+        console.error("Failed to parse users:", response.body);
+        return response;
+    }
+
+    // If backend sends a Set serialized as array -> fine
+    // If it's an object, convert accordingly
+    if (Array.isArray(users)) {
+        users.forEach(name => {
+            const p = document.createElement("p");
+            p.textContent = name;
+            container.appendChild(p);
+        });
+    } else if (users && typeof users === "object") {
+        // fallback for weird JSON shapes (like {"user1":true})
+        Object.keys(users).forEach(name => {
+            const p = document.createElement("p");
+            p.textContent = name;
+            container.appendChild(p);
+        });
+    } else {
+        console.warn("Unexpected users format:", users);
+    }
+
+    return response;
+}
+function stopStream() {
+    if (eventSource) {
+        eventSource.close();
+        console.log("Stream stopped");
+    }
 }

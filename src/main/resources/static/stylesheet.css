@@ -51,3 +51,13 @@ input {
 .inputs{
     background-color: var(--temp3-color);
 }
+.currentUsers {
+    background-color: var(--temp2-color);
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 10px;
+    color: white;
+    margin-left: auto;
+    float: right;
+    background-color: orange;
+}

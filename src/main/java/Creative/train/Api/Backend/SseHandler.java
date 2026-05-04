@@ -6,10 +6,7 @@ import Creative.train.Managers.SessionManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class SseHandler {
     //private final Map<UUID, Player> connectionMap;
@@ -26,59 +23,73 @@ public class SseHandler {
         System.out.println("Player UUID: " + playerUUID + " connected.");
         handleNewConnection(playerUUID, emitter);
 
-        try {
-            emitter.send("connected");
-            System.out.println("Sent 'connected' to player UUID: " + playerUUID);
-        } catch (IOException e) {
-            emitter.complete();
-            System.out.println("Error sending message to player UUID: " + playerUUID);
-        }
-        SessionManager sessionManager= SessionManager.getInstance();
         emitter.onCompletion(() -> {
-            sessionManager.removePlayer(playerUUID);
             System.out.println("Connection closed for player UUID: " + playerUUID);
         });
         emitter.onTimeout(() -> {
-            sessionManager.removePlayer(playerUUID);
             System.out.println("Connection timed out for player UUID: " + playerUUID);
         });
         emitter.onError((e) -> {
-            sessionManager.removePlayer(playerUUID);
             System.out.println("Error occurred for player UUID: " + playerUUID);
         });
 
         return emitter;
     }
     private void handleNewConnection(UUID playerUuid,SseEmitter emitter){
-        //connectionMap.put(player.getPlayerId(),player);
         Player player = SessionManager.getInstance().getPlayer(playerUuid);
         if (player == null) {
-            emitter.completeWithError(new RuntimeException("Player not found"));
+            //emitter.completeWithError(new RuntimeException("Player not found"));
             return;
         }
         player.setConnection(emitter);
     }
     public void sendNewPlayerInfo(List<UUID> playerUuids, String player) {
-        System.out.println("uuid size:"+playerUuids.size());
-        for (UUID id : playerUuids) {
-            System.out.println("id:"+id);
-            SseEmitter emitter = SessionManager.getInstance().getPlayer(id).getConnection();
+       sendPlayer(playerUuids,"playerJoined",player);
+    }
+    public static void sendPlayerDisconnectInfo(List<UUID> playerUuids,String player){
+        sendPlayer(playerUuids,"playerDisconnected",player);
+    }
+    private static void sendPlayer(List<UUID> playerUuids,String event,Object data){
+        Iterator<UUID> iterator = playerUuids.iterator();
+        while (iterator.hasNext()) {
+            UUID id = iterator.next();
+            Player playerData = SessionManager.getInstance().getPlayer(id);
+            SseEmitter emitter = playerData.getConnection();
 
-            if (emitter == null) {System.out.println("continue"); continue;}
+            if (emitter == null) continue;
 
             try {
                 emitter.send(SseEmitter.event()
-                        .name("playerJoined")
-                        .data(player));
-                System.out.println("sent playerjoined to:"+id);
+                        .name(event)
+                        .data(data));
             } catch (IOException e) {
-                System.out.println("removed id  :"+id);
-
-                emitter.complete();
+                iterator.remove();
+                sendPlayerDisconnectInfo(playerUuids, playerData.getName());
             }
         }
     }
-    public void disconnectPlayer(UUID playerUuid){
-        SessionManager.getInstance().getPlayer(playerUuid).getConnection().complete();
+    public static void disconnectPlayer(UUID playerUuid){
+        SessionManager sm = SessionManager.getInstance();
+        Player player = sm.getPlayer(playerUuid);
+
+        if (player == null) return;
+
+        Session session = sm.getSession(player.getSessionUUID());
+        List<UUID> players = new ArrayList<>(session.getAllPlayerUuids());
+
+        players.remove(playerUuid);
+
+        sendPlayerDisconnectInfo(players, player.getName());
+
+        SseEmitter emitter = player.getConnection();
+        if (emitter != null) {
+            try {
+                emitter.complete();
+            } catch (IllegalStateException ignored) {}
+        }
+
+        sm.removePlayer(playerUuid);
     }
-}
+
+    }
+
