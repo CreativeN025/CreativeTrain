@@ -74,7 +74,7 @@ public class SseHandler {
         Player player = sm.getPlayer(playerUuid);
 
         if (player == null) return;
-
+        System.out.println("sessionId:"+player.getSessionUUID());
         Session session = sm.getSession(player.getSessionUUID());
         List<UUID> players = new ArrayList<>(session.getAllPlayerUuids());
 

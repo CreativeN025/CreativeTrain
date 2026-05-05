@@ -46,6 +46,7 @@ public class SessionApi {
         SseHandler websocketHandler= SseHandler.getInstance();
 
         if (result.isHost()) {
+            player.setSessionUUID(result.getHostInformation().getSessionId());
             return ResponseEntity.ok(result.getHostInformation());
         }
         if(result.getHostInformation()!=null) {
@@ -76,6 +77,7 @@ public class SessionApi {
     }
     @PostMapping("/leaveGame")
     public ResponseEntity<?> leaveGame(@RequestParam UUID playerUuid){
+        System.out.println("playerUuid: "+playerUuid);
         SseHandler.disconnectPlayer(playerUuid);
         return ResponseEntity.status(HttpStatus.OK).build();
     }

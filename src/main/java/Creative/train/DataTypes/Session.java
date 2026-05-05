@@ -50,7 +50,4 @@ public class Session {
                 .map(Player::getName)
                 .collect(Collectors.toSet());
     }
-    public void kickPlayer(UUID playerUuid){
-        playerMap.remove(playerUuid);
-    }
 }
