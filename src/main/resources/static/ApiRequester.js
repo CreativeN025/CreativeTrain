@@ -1,8 +1,12 @@
 async function makePostRequest(url, method, data = null) {
     const response = await fetch(url, {
         method,
-        headers: data ? { "Content-Type": "application/json" } : {},
-        body: data ? JSON.stringify(data) : null
+        headers: data
+            ? { "Content-Type": "application/json" }
+            : {},
+        body: data
+            ? JSON.stringify(data)
+            : null
     });
 
     const text = await response.text();
@@ -16,6 +20,7 @@ async function makePostRequest(url, method, data = null) {
 
 async function makeGetRequest(url) {
     const response = await fetch(url);
+
     const text = await response.text();
 
     return {
@@ -25,146 +30,256 @@ async function makeGetRequest(url) {
     };
 }
 
-// ---------------- QR ----------------
+/* ---------------- QR ---------------- */
+
 async function generatePlayerQr() {
     document.getElementById("qrCode").src =
-        "/api/newPlayerQr?ts=" + Date.now(); // cache-bust
+        "/api/newPlayerQr?ts=" + Date.now();
 }
 
-// ---------------- START SESSION ----------------
-async function startSession() {
-    const sessionId = sessionStorage.getItem("sessionUuid");
-    const hostUuid = sessionStorage.getItem("playerUuid");
+/* ---------------- SESSION ---------------- */
 
-    const res = await makePostRequest("/api/session/start", "POST", {
-        sessionId,
-        hostUuid
-    });
-    if(res.status == 404) {
+async function startSession() {
+    const sessionId =
+        sessionStorage.getItem("sessionUuid");
+
+    const hostUuid =
+        sessionStorage.getItem("playerUuid");
+
+    const res = await makePostRequest(
+        "/api/session/start",
+        "POST",
+        {
+            sessionId,
+            hostUuid
+        }
+    );
+
+    if (res.status === 404) {
         alert("Session not found");
         return;
-    } else if(res.status == 403) {
+    }
+
+    if (res.status === 403) {
         alert("Only the host can start the session");
         return;
     }
-    else if(!res.ok) {
-        alert("Failed to start session: " + res.body);
+
+    if (!res.ok) {
+        alert("Failed to start session");
         return;
     }
 
-    console.log("Start session:", res);
-    return res;
+    console.log("Session started");
 }
-async function leaveSession() {
-     const playerUuid = sessionStorage.getItem("playerUuid");
-    if (!playerUuid) return;
 
-    const url = `/api/session/leaveGame?playerUuid=${playerUuid}`;
+/* ---------------- STREAM ---------------- */
 
-    navigator.sendBeacon(url);
+let eventSource = null;
 
-    stopStream();
-    sessionStorage.clear();
-
-    console.log("left session " + playerUuid);
-}
-let eventSource;
 const userElements = new Map();
 
 function startStream(playerUuid) {
-    const url = `/api/stream?playerUuid=${playerUuid}&ts=${Date.now()}`;
-    const eventSource = new EventSource(url);
 
-    // ✅ ADD USER
-    eventSource.addEventListener("playerJoined", (event) => {
-        console.log("New player joined:", event.data);
+    stopStream();
 
-        const container = document.getElementById("currentUsers");
+    const url =
+        `/api/stream?playerUuid=${playerUuid}&ts=${Date.now()}`;
 
-        const p = document.createElement("p");
-        p.textContent = event.data;
-        container.appendChild(p);
+    eventSource = new EventSource(url);
 
-        // store reference so we can remove later
-        userElements.set(event.data, p);
-    });
+    const userList =
+        document.getElementById("userList");
 
-    // ❌ REMOVE USER
-    eventSource.addEventListener("playerDisconnected", (event) => {
-        console.log("Player disconnected:", event.data);
+    // Player joined
+    eventSource.addEventListener(
+        "playerJoined",
+        (event) => {
 
-        const element = userElements.get(event.data);
+            const name = event.data;
 
-        if (element) {
-            element.remove(); // removes from DOM
-            userElements.delete(event.data);
+            console.log("Joined:", name);
+
+            if (userElements.has(name)) {
+                return;
+            }
+
+            const li = document.createElement("li");
+
+            li.textContent = name;
+
+            userList.appendChild(li);
+
+            userElements.set(name, li);
         }
-    });
+    );
 
+    // Player left
+    eventSource.addEventListener(
+        "playerDisconnected",
+        (event) => {
+
+            const name = event.data;
+
+            console.log("Disconnected:", name);
+
+            const element =
+                userElements.get(name);
+
+            if (element) {
+                element.remove();
+                userElements.delete(name);
+            }
+        }
+    );
+eventSource.addEventListener("sessionStart", (event) => {
+    const role = event.data;
+
+    showTransition(`Session Started! Role: ${role}`);
+    window.location.href="./activeGame.html";
+    setTimeout(() => {
+        hideTransition();
+    }, 3000);
+});
+        
+    
     eventSource.onerror = () => {
         console.log("Stream disconnected");
     };
 }
-async function registerAndConnect() {
-    if(sessionStorage.getItem("playerUuid") || sessionStorage.getItem("sessionUuid")) {
-        return; //already registered
-    }
-    const result = await registerUser();
+function showTransition(text = "Loading...") {
+    const screen = document.getElementById("transitionScreen");
 
-    // Parse the response data into JSON
-    const data = JSON.parse(result.data);  // Parse the string to JSON
+    screen.textContent = text;
+    screen.classList.add("active");
+}
 
-    const playerUuid = data.playerUuid; // Access the playerUuid property
-    const sessionUuid = data.sessionId; // Access the sessionUuid property
-    sessionStorage.setItem("playerUuid", playerUuid)
-    sessionStorage.setItem("sessionUuid",sessionUuid)
+function hideTransition() {
+    const screen = document.getElementById("transitionScreen");
 
-    console.log("loginResponse", `sessionStorage set with token value: ${playerUuid}`)
-    startStream(playerUuid);
-    //const sessionUuid= document.getElementById("register-session-uuid").value;
-    if (sessionUuid && sessionUuid.length > 0) {
-                await getCurrentUsers({  sessionUuid});
+    screen.classList.remove("active");
+}
+function stopStream() {
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
 
+        console.log("Stream stopped");
     }
 }
-window.addEventListener("beforeunload", () => {
-    leaveSession();
-});
-async function registerUser() {
-    const isHost = document.getElementById("isHost").checked;
-    const playerUuidInput = document.getElementById("player-uuid");
-    const playerName = document.getElementById("player-name").value;
-    const joinedSession = document.getElementById("register-session-uuid").value;
-    const file = playerUuidInput.files[0]; // Get the file from the input
-    // Check if a file has been selected
-    if (!file) {
-        alert("Please select a file to upload.");
+
+/* ---------------- REGISTER ---------------- */
+
+async function registerAndConnect() {
+
+    if (
+        sessionStorage.getItem("playerUuid") ||
+        sessionStorage.getItem("sessionUuid")
+    ) {
         return;
-    }
-    if (!playerName) {
-        alert("Please enter your username.");
-        return;
-    }
-    if(!isHost && !joinedSession) {
-        alert("Please enter the session ID you want to join.");
-        return;
-    }
-    // Create a FormData object to send both file and other fields
-    const formData = new FormData();
-    formData.append("playerQr", file); // Append the file as 'playerQr'
-    formData.append("playerName", playerName);
-    if(!isHost) {
-        formData.append("joinedSession", joinedSession);
     }
 
-    // Make the POST request with FormData
-    const response = await fetch("/api/session/register", {
-        method: "POST",
-        body: formData // Note: FormData automatically sets the correct Content-Type
+    const result = await registerUser();
+
+    if (!result || !result.ok) {
+        return;
+    }
+
+    let data;
+
+    try {
+        data = JSON.parse(result.data);
+    } catch (err) {
+        console.error("Invalid JSON:", result.data);
+        return;
+    }
+
+    const playerUuid = data.playerUuid;
+    const sessionUuid = data.sessionId;
+
+    sessionStorage.setItem(
+        "playerUuid",
+        playerUuid
+    );
+
+    sessionStorage.setItem(
+        "sessionUuid",
+        sessionUuid
+    );
+
+    document.getElementById(
+        "sessionUuidDisplay"
+    ).innerText =
+        `Session UUID: ${sessionUuid}`;
+
+    console.log("Connected:", playerUuid);
+
+    startStream(playerUuid);
+
+    await getCurrentUsers({
+        sessionUuid
     });
+}
+
+async function registerUser() {
+
+    const isHost =
+        document.getElementById("isHost").checked;
+
+    const playerUuidInput =
+        document.getElementById("player-uuid");
+
+    const playerName =
+        document.getElementById("player-name")
+            .value
+            .trim();
+
+    const joinedSession =
+        document.getElementById(
+            "register-session-uuid"
+        ).value.trim();
+
+    const file =
+        playerUuidInput.files[0];
+
+    if (!file) {
+        alert("Please upload a QR image.");
+        return;
+    }
+
+    if (!playerName) {
+        alert("Please enter a username.");
+        return;
+    }
+
+    if (!isHost && !joinedSession) {
+        alert("Please enter a session ID.");
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("playerQr", file);
+    formData.append("playerName", playerName);
+
+    if (!isHost) {
+        formData.append(
+            "joinedSession",
+            joinedSession
+        );
+    }
+
+    const response = await fetch(
+        "/api/session/register",
+        {
+            method: "POST",
+            body: formData
+        }
+    );
 
     const text = await response.text();
-    console.log("Response:", text);
+
+    console.log("Register response:", text);
 
     return {
         status: response.status,
@@ -172,64 +287,117 @@ async function registerUser() {
         data: text
     };
 }
-async function makeUserRequest(params){
-    const getHostUrl = `/api/session/hostName?${new URLSearchParams(params).toString()}`;
-    const url = `/api/session/connectedUsers?${new URLSearchParams(params).toString()}`;
 
-    const [response, hostResponse] = await Promise.all([
-        makeGetRequest(url),
-        makeGetRequest(getHostUrl)
-    ]);
+/* ---------------- USERS ---------------- */
 
-    return { response, hostResponse };
+async function makeUserRequest(params) {
+
+    const userUrl =
+        `/api/session/connectedUsers?${new URLSearchParams(params)}`;
+
+    const hostUrl =
+        `/api/session/hostName?${new URLSearchParams(params)}`;
+
+    const [response, hostResponse] =
+        await Promise.all([
+            makeGetRequest(userUrl),
+            makeGetRequest(hostUrl)
+        ]);
+
+    return {
+        response,
+        hostResponse
+    };
 }
 
 async function getCurrentUsers(params) {
-    //const response = await makeGetRequest(url);
-    const { response, hostResponse } = await makeUserRequest(params);
-    const container = document.getElementById("currentUsers");
-    //p.style.color = "green"; // optional: highlight new joiners
-    //const hostResponse = await makeGetRequest(getHostUrl);
-    // optional but recommended: prevent duplicates
-    container.innerHTML = "";
 
-    let users;
+    const {
+        response,
+        hostResponse
+    } = await makeUserRequest(params);
+
+    const userList =
+        document.getElementById("userList");
+
+    userList.innerHTML = "";
+
+    userElements.clear();
+
+    let users = [];
 
     try {
         users = JSON.parse(response.body);
-    } catch (e) {
-        console.error("Failed to parse users:", response.body);
-        return response;
-    }
-   
-    
-    // If backend sends a Set serialized as array -> fine
-    // If it's an object, convert accordingly
-    if (Array.isArray(users)) {
-        users.forEach(name => {
-            const p = document.createElement("p");
-            p.textContent = name;
-            if(name === hostResponse.body) {
-                p.style.color = "green";
-            }
-            container.appendChild(p);
-        });
-    } else if (users && typeof users === "object") {
-        // fallback for weird JSON shapes (like {"user1":true})
-        Object.keys(users).forEach(name => {
-            const p = document.createElement("p");
-            p.textContent = name;
-            container.appendChild(p);
-        });
-    } else {
-        console.warn("Unexpected users format:", users);
+    } catch (err) {
+        console.error(
+            "Failed to parse users:",
+            response.body
+        );
+
+        return;
     }
 
-    return response;
-}
-function stopStream() {
-    if (eventSource) {
-        eventSource.close();
-        console.log("Stream stopped");
+    if (!Array.isArray(users)) {
+        console.warn("Invalid user format");
+        return;
     }
+
+    users.forEach((name) => {
+
+        const li =
+            document.createElement("li");
+
+        li.textContent = name;
+
+if (name === hostResponse.body) {
+
+    const crownImg = document.createElement("img");
+
+    crownImg.src = "crown.png";
+
+    crownImg.style.width = "18px";
+    crownImg.style.height = "18px";
+    crownImg.style.marginLeft = "8px";
+
+    li.style.color = "#6dff8b";
+    li.style.fontWeight = "bold";
+
+    li.style.display = "flex";
+    li.style.alignItems = "center";
+
+    li.appendChild(crownImg);
 }
+
+        userList.appendChild(li);
+
+        userElements.set(name, li);
+    });
+}
+
+/* ---------------- LEAVE ---------------- */
+
+async function leaveSession() {
+
+    const playerUuid =
+        sessionStorage.getItem("playerUuid");
+
+    if (!playerUuid) {
+        return;
+    }
+
+    const url =
+        `/api/session/leaveGame?playerUuid=${playerUuid}`;
+
+    navigator.sendBeacon(url);
+
+    stopStream();
+
+    sessionStorage.clear();
+
+    console.log("Left session");
+}
+
+window.addEventListener(
+    "beforeunload",
+    leaveSession
+);
