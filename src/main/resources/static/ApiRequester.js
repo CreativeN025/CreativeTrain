@@ -1,4 +1,4 @@
-async function makePostRequest(url, method, data = null) {
+    async function makePostRequest(url, method, data = null) {
     const response = await fetch(url, {
         method,
         headers: data
@@ -133,13 +133,24 @@ function startStream(playerUuid) {
         }
     );
 eventSource.addEventListener("sessionStart", (event) => {
-    const role = event.data;
 
-    showTransition(`Session Started! Role: ${role}`);
-    window.location.href="./activeGame.html";
+    const role = JSON.parse(event.data);
+
+    showTransition(role.name, role.hex);
+
+    showTransition(`Session Started! Role: ${role.name}`, role.hex);
+
     setTimeout(() => {
+        let shouldLeaveSession = true;
+        shouldLeaveSession = false;
+
+        window.location.href =
+            "activeGame?sessionUuid=" +
+            sessionStorage.getItem("sessionUuid");
+
         hideTransition();
-    }, 3000);
+
+    }, 10000);
 });
         
     
@@ -147,10 +158,11 @@ eventSource.addEventListener("sessionStart", (event) => {
         console.log("Stream disconnected");
     };
 }
-function showTransition(text = "Loading...") {
+function showTransition(text = "Loading...", color = "#fff") {
     const screen = document.getElementById("transitionScreen");
-
+    
     screen.textContent = text;
+    screen.style.color = color;
     screen.classList.add("active");
 }
 
@@ -182,6 +194,7 @@ async function registerAndConnect() {
     const result = await registerUser();
 
     if (!result || !result.ok) {
+        alert("Registration failed: " + (result ? result.data : "Unknown error"));
         return;
     }
 
@@ -210,7 +223,7 @@ async function registerAndConnect() {
     document.getElementById(
         "sessionUuidDisplay"
     ).innerText =
-        `Session UUID: ${sessionUuid}`;
+        sessionUuid;
 
     console.log("Connected:", playerUuid);
 
@@ -397,7 +410,9 @@ async function leaveSession() {
     console.log("Left session");
 }
 
-window.addEventListener(
-    "beforeunload",
-    leaveSession
-);
+let shouldLeaveSession = true;
+window.addEventListener("beforeunload", () => {
+    if (shouldLeaveSession) {
+        leaveSession();
+    }
+});
