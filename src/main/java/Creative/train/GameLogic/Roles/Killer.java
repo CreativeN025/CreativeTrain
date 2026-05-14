@@ -8,7 +8,7 @@ import Creative.train.DataTypes.Session;
 public class Killer extends Role{
 
     public Killer() {
-        super("Killer", Team.KILLER);
+        super("Killer", Team.KILLER,50,"#d90408");
     }
     public void killPlayer(Session session, Player player){
         player.setAlive(false);
