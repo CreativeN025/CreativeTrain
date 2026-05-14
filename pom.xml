@@ -4,7 +4,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- ✅ Spring Boot parent fixes EVERYTHING -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -36,11 +35,11 @@
         </dependency>
 
         <!-- 🔥 Firebase -->
-        <dependency>
+       <!-- <dependency>
             <groupId>com.google.firebase</groupId>
             <artifactId>firebase-admin</artifactId>
             <version>9.8.0</version>
-        </dependency>
+        </dependency>-->
 
         <!-- 📷 QR -->
         <dependency>
@@ -53,6 +52,11 @@
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>
             <version>3.5.3</version> <!-- Keep the latest version -->
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

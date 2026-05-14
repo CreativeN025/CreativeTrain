@@ -15,6 +15,7 @@ import java.util.UUID;
 
 public class RoleAssigner {
     static SessionManager sessionManager = SessionManager.getInstance();
+    public static int playersNeededForNewSpecialRole=6; //for testing, real value should be 6
 
     public static void assignAllRoles(Session session){
         List<UUID> uuids = session.getAllPlayerUuids();
@@ -40,27 +41,31 @@ public class RoleAssigner {
         }
 
     }
-    private static List<Role> createRoles(int playerCount) {
+
+    static List<Role> createRoles(int playerCount) {
         List<Role> roleList=new ArrayList<>();
-        int playersNeededForNewSpecialRole=3; //for testing, real value should be 6
         var killers = GlobalVariableHolder.killerClasses;
         var neutrals = GlobalVariableHolder.neutralClasses;
         var innocents = GlobalVariableHolder.innocentClasses;
-        int roleCount=0;
-        //add a new killer/neutral for every 6 players
-        for (roleCount = 0; roleCount < playerCount/playersNeededForNewSpecialRole; roleCount++) {
+
+        int sets = playerCount / playersNeededForNewSpecialRole;
+
+        //add a new killer/neutral for every playersNeededForNewSpecialRole players
+        for (int i = 0; i < sets; i++) {
+
             Role killer = getRandomRole(killers);
             Role neutral = getRandomRole(neutrals);
-            if(killer!=null) {roleList.add(killer);
-                System.out.println(killer.getName());
-            }
-            if(neutral!=null) roleList.add(neutral);
+
+            if (killer != null) roleList.add(killer);
+            if (neutral != null) roleList.add(neutral);
+
             roleList.add(new Vigilante());
         }
 
-        while (roleCount<playerCount){
-            roleList.add(getRandomRole(innocents));
-            roleCount++;
+
+        var noVigiInnocents = innocents.stream().filter(aClass -> !aClass.equals(Vigilante.class)).toList();
+        while (roleList.size() < playerCount) {
+            roleList.add(getRandomRole(noVigiInnocents));
         }
         return roleList;
     }

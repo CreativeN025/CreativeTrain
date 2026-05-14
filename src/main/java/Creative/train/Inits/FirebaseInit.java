@@ -1,4 +1,4 @@
-package Creative.train.Inits;
+/*package Creative.train.Inits;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
@@ -28,4 +28,4 @@ public class FirebaseInit {
 
         System.out.println("Firebase initialized");
     }
-}
+}*/

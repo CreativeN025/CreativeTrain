@@ -10,15 +10,15 @@ import java.util.List;
 
 public class GlobalVariableHolder {
     public final static String apiPrefix = "/api";
-    public final static List<Class<? extends Role>> killerClasses =
+    public static List<Class<? extends Role>> killerClasses =
             List.of(
                     Killer.class
             );
 
-    public final static List<Class<? extends Role>> neutralClasses =
+    public static List<Class<? extends Role>> neutralClasses =
             List.of();
 
-    public final static List<Class<? extends Role>> innocentClasses =
+    public static List<Class<? extends Role>> innocentClasses =
             List.of(
                     Innocent.class,
                     Vigilante.class
