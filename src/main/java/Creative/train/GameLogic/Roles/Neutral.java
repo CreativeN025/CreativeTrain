@@ -2,6 +2,6 @@ package Creative.train.GameLogic.Roles;
 
 public class Neutral extends Role{
     public Neutral() {
-        super("Neutral", Team.NEUTRAL, 0, "#fff");
+        super("Neutral", Team.NEUTRAL, "#fff");
     }
 }

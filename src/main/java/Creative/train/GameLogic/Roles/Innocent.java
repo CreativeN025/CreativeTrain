@@ -5,6 +5,6 @@ import Creative.train.DataTypes.GlobalVariableHolder;
 public class Innocent extends Role{
 
     public Innocent() {
-        super("Innocent", Team.CIVILIAN,50,"#02d926");
+        super("Innocent", Team.CIVILIAN,"#02d926");
     }
 }

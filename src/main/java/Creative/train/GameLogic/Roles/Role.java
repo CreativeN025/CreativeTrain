@@ -1,5 +1,6 @@
 package Creative.train.GameLogic.Roles;
 
+import Creative.train.DataTypes.Wrappers.RoleData;
 import Creative.train.GameLogic.Items.Item;
 
 import java.util.ArrayList;
@@ -10,21 +11,22 @@ public abstract class Role {
     protected final String name;
     protected final Team team;
     protected final String hex;
-
+    //protected boolean enableShop;
+    //protected boolean passiveIncome;
+    //protected int taskIncome;
     final List<Item> itemShop = new ArrayList<>();
     final List<Item> baseInventory = new ArrayList<>();
 
-    protected final int coinsPerMin;
-    public Role(String name, Team team,int coinsPerMin,String hex) {
+    public Role(String name,Team team,String hex) {
         this.name = name;
         this.team = team;
         this.hex = hex;
-        this.coinsPerMin = coinsPerMin;
+        //this.enableShop = data.enableShop;
+        //this.passiveIncome = data.passiveIncome;
+        //this.taskIncome = data.taskIncome;
+
     }
 
-    public int getCoinsPerMin() {
-        return coinsPerMin;
-    }
 
     public List<Item> getItemShop() {
         return itemShop;

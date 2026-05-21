@@ -1,4 +1,4 @@
-package Creative.train.DataTypes.RequestTypes;
+package Creative.train.DataTypes.Wrappers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -3,7 +3,7 @@ package Creative.train.Api.Backend;
 import Creative.train.DataTypes.GlobalVariableHolder;
 import Creative.train.DataTypes.Player;
 import Creative.train.DataTypes.RegisterPlayerResponse;
-import Creative.train.DataTypes.RequestTypes.PlayerInformation;
+import Creative.train.DataTypes.Wrappers.PlayerInformation;
 import Creative.train.DataTypes.Session;
 import Creative.train.Managers.EncryptionManager;
 import Creative.train.Managers.QrManager;

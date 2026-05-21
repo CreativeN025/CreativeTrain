@@ -1,6 +1,6 @@
 package Creative.train.DataTypes;
 
-import Creative.train.DataTypes.RequestTypes.PlayerInformation;
+import Creative.train.DataTypes.Wrappers.PlayerInformation;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.http.ResponseEntity;
 

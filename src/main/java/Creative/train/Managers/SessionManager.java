@@ -3,7 +3,7 @@ package Creative.train.Managers;
 import Creative.train.Api.Backend.SseHandler;
 import Creative.train.DataTypes.Player;
 import Creative.train.DataTypes.RegisterPlayerResponse;
-import Creative.train.DataTypes.RequestTypes.PlayerInformation;
+import Creative.train.DataTypes.Wrappers.PlayerInformation;
 import Creative.train.DataTypes.Session;
 import Creative.train.GameLogic.RoleAssigner;
 import org.springframework.http.ResponseEntity;
