@@ -5,6 +5,7 @@ CreativeTrain is a real-life social deduction game where players interact in per
 The idea is inspired by games like *Mafia* and *Among Us*, but played in the real world instead of on a screen.
 
 ---
+<img width="1887" height="1018" alt="grafik" src="https://github.com/user-attachments/assets/cabb59bd-0b72-444b-b1d7-b8215ba87809" />
 
 # 🎮 How it works
 
@@ -18,7 +19,8 @@ During the game:
 - The backend checks if the action is valid  
 - Player status updates immediately in the system  
 
-Admins can monitor who is still in the game and track what’s happening in real time.
+
+<img width="959" height="500" alt="grafik" src="https://github.com/user-attachments/assets/076f5e0b-9af6-4be2-bf3e-582d553e9c54" />
 
 ---
 
