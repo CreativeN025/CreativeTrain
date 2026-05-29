@@ -13,21 +13,21 @@ public abstract class Role {
     protected final String name;
     protected final Team team;
     protected final String hex;
-    //protected boolean enableShop;
-    //protected boolean passiveIncome;
-    //protected int taskIncome;
+
+    protected boolean enableShop;
+    protected boolean passiveIncome;
+    protected int taskIncome;
     final List<Item> itemShop = new ArrayList<>();
     final List<Item> baseInventory = new ArrayList<>();
 
-    public Role(UUID sessionUuid,String name) {
-        RoleDataManager roleDataManager = RoleDataManager.getInstance();
-        RoleData data = roleDataManager.getRoleData(sessionUuid,name);
-        this.name = data.name;
-        this.team = data.team;
-        this.hex = data.hex;
-        //this.enableShop = data.enableShop;
-        //this.passiveIncome = data.passiveIncome;
-        //this.taskIncome = data.taskIncome;
+    public Role(UUID sessionUuid,String name,Team team,String hex) {
+        RoleData data = RoleDataManager.getRoleData(sessionUuid,name);
+        this.name = name;
+        this.team = team;
+        this.hex = hex;
+        this.enableShop = data.enableShop;
+        this.passiveIncome = data.passiveIncome;
+        this.taskIncome = data.taskIncome;
 
     }
 

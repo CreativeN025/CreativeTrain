@@ -7,6 +7,6 @@ import java.util.UUID;
 public class Innocent extends Role{
 
     public Innocent(UUID sessionUuid) {
-        super(sessionUuid,"Innocent");
+        super(sessionUuid,"Innocent",Team.CIVILIAN,"#02d926");
     }
 }

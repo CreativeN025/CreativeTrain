@@ -9,7 +9,7 @@ import java.util.UUID;
 public class Killer extends Role{
 
     public Killer(UUID sessionUuid) {
-        super( sessionUuid,"Killer");
+        super( sessionUuid,"Killer",Team.KILLER,"#d90408");
     }
     public void killPlayer(Session session, Player player){
         player.setAlive(false);

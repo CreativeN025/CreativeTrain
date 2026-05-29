@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public class Neutral extends Role{
     public Neutral(UUID sessionUuid) {
-        super( sessionUuid ,"Neutral");
+        super( sessionUuid ,"Neutral",Team.NEUTRAL, "#fff");
     }
 }

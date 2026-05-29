@@ -22,7 +22,7 @@ public class RoleDataManager {
     public static RoleData getRoleData(UUID sessionUuid, String name){
         return roleDataMap.get(sessionUuid).get(name);
     }
-    public void addRoleData(UUID sessionUuid, String className, RoleData roleData) {
+    public static void addRoleData(UUID sessionUuid, String className, RoleData roleData) {
         roleDataMap
                 .computeIfAbsent(sessionUuid, k -> new ConcurrentHashMap<>())
                 .put(className, roleData);
