@@ -134,7 +134,6 @@ public class SessionManager {
         SessionEndData sessionEndData = new SessionEndData();
         Session session = getSession(sessionUuid);
         session.stop();
-
         sessionEndData.winnerTeam = winners;
         sessionEndData.reason = reason;
 
