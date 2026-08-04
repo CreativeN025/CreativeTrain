@@ -103,15 +103,15 @@ public class SseHandler {
         sendPlayer(List.of(playerUuid),"challengeUpdate",challenge);
     }
     public static void disconnectPlayer(UUID playerUuid){
-        SessionManager sm = SessionManager.getInstance();
-        Player player = sm.getPlayer(playerUuid);
+        SessionManager sessionManager = SessionManager.getInstance();
+        Player player = sessionManager.getPlayer(playerUuid);
 
         if (player == null) return;
-        Session session = sm.getSession(player.getSessionUUID());
+        Session session = sessionManager.getSession(player.getSessionUUID());
         List<UUID> players = new ArrayList<>(session.getAllPlayerUuids());
 
         players.remove(playerUuid);
-        sm.removePlayer(playerUuid);
+        sessionManager.removePlayer(playerUuid);
 
         sendPlayerDisconnectInfo(players, player.getName());
 
