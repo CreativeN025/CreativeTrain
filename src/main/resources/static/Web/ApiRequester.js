@@ -294,7 +294,7 @@ function startStream() {
                         "sessionUuid"
                     );
 
-            }, 1000);
+            }, 7000);
         }
     );
 

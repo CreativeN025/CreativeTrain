@@ -15,6 +15,7 @@ import Creative.train.Managers.SessionManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -152,6 +153,10 @@ public class Player {
     public void assignRole(Role role){
         if(baseData.role==null) {
             baseData.role = role;
+            List<Item> baseInv = baseData.role.getBaseInventory();
+            if(baseInv!=null) {
+                baseInv.forEach(this::addItem);
+            }
         }
     }
 

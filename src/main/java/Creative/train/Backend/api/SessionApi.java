@@ -187,7 +187,7 @@ public class SessionApi {
                                         @RequestParam("sessionToken") String killerToken,
                                         @RequestParam String challenge,
                                         @RequestParam UUID victimUuid,
-                                        @RequestParam UUID itemUuid){
+                                        @RequestParam UUID itemUuid) throws NotFoundException {
         Player killer =sessionManager.getPlayer(killerUuid);
 
         Player victim = sessionManager.getPlayer(victimUuid);

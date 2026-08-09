@@ -171,7 +171,9 @@ public class SessionManager {
         }
         return true;
     }
-    public boolean isSessionActive(UUID sessionUuid){
+    public boolean isSessionActive(UUID sessionUuid) throws NotFoundException {
+        Session session = getSession(sessionUuid);
+        if(session==null) throw new NotFoundException("Session",sessionUuid);
         return getSession(sessionUuid).isActive();
     }
     public void setPlayerDead(Player player){
@@ -183,7 +185,7 @@ public class SessionManager {
         session.getTimeManager().changeRemainingSecondsBy
                 (session.getGeneralConfig().getIncrementTimerOnKillInSeconds());
     }
-    public ResponseEntity<?> killPlayer(Player killer, Player victim, UUID itemUuid){
+    public ResponseEntity<?> killPlayer(Player killer, Player victim, UUID itemUuid) throws NotFoundException {
         Session session = getSession(killer.getSessionUUID());
         if(!isSessionActive(killer.getSessionUUID())) return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body("Session is not active");
