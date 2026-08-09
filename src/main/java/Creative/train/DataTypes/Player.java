@@ -5,19 +5,19 @@ import Creative.train.Backend.ExceptionTypes.NotEnoughCoinsException;
 import Creative.train.Backend.ExceptionTypes.NotFoundException;
 import Creative.train.Backend.api.SseHandler;
 import Creative.train.DataTypes.Wrappers.BasePlayerData;
+import Creative.train.DataTypes.Wrappers.DeathInformation;
 import Creative.train.DataTypes.Wrappers.PlayerData;
 import Creative.train.GameLogic.GeneralConfig;
 import Creative.train.GameLogic.Items.Item;
 import Creative.train.GameLogic.Quest;
+import Creative.train.GameLogic.Roles.Amnesiac;
 import Creative.train.GameLogic.Roles.Role;
 import Creative.train.Managers.EncryptionManager;
 import Creative.train.Managers.SessionManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 public class Player {
 
@@ -83,6 +83,15 @@ public class Player {
 
         return data.token.equals(hashedPassword);
     }
+    public Role changeRole(String roleName) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        if(getRole() instanceof Amnesiac){
+            session.decrementAliveNeutrals();
+            baseData.role = Objects.requireNonNull(GlobalVariableHolder.getRoleClass(roleName)).getDeclaredConstructor(UUID.class).newInstance(getSessionUUID());
+            return baseData.role;
+        }
+        return null;
+    }
+
     public void handleSanity(){
         if(!isAlive()) return;
         if(getBaseData().depression==-1){
@@ -93,7 +102,8 @@ public class Player {
         if(getBaseData().sanity<=0){
             updateSanity(getBaseData().sanity, getBaseData().depression-1);
             if(getBaseData().depression<=0){
-                SessionManager.getInstance().setPlayerDead(this);
+                DeathInformation information = new DeathInformation(null,this,null);
+                SessionManager.getInstance().setPlayerDead(information);
             }
             return;
         }

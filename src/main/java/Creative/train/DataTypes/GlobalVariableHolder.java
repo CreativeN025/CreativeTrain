@@ -14,7 +14,10 @@ public class GlobalVariableHolder {
 
     public static List<Class<? extends Role>> neutralClasses =
             new ArrayList<>(List.of(
-
+                    LicensedVillain.class,
+                    Amnesiac.class,
+                    Jester.class,
+                    CultLeader.class
             ));
 
     public static List<Class<? extends Role>> innocentClasses =
